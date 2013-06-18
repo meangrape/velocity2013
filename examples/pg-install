@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+echo ansible-playbook ./examples/pg-install.yml -c ssh -u ubuntu -s
+ansible-playbook ./examples/pg-install.yml -c ssh -u ubuntu -s

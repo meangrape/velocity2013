@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+echo ansible -c ssh -i hosts -m ping db
+ansible -c ssh -i hosts -m ping db

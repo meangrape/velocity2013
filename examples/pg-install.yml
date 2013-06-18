@@ -1,0 +1,45 @@
+---
+- hosts: '*'
+  gather_facts: no
+  tasks:
+
+  - name: install python properties
+    apt: pkg=python-software-properties state=present
+  
+  - name: install postgresql repo
+    apt_repository: repo=ppa:pitti/postgresql
+ 
+  - name: update apt 
+    apt: update_cache=yes
+
+  - name: install postgres
+    apt: pkg={{ item }} state=present
+    with_items: 
+     - libpq5
+     - libpq-dev
+     - postgresql-9.2
+     - postgresql-contrib-9.2
+     - postgresql-server-dev-9.2
+     - python-psycopg2
+
+  - name: start postgresql
+    service: name=postgresql state=started enabled=true
+
+  - name: create database
+    sudo_user: postgres
+    postgresql_db: db=velocity encoding='UTF-8' lc_collate='en_US.UTF-8' lc_ctype='en_US.UTF-8' template='template0'
+
+  - name: create db user
+    sudo_user: postgres
+    postgresql_user: name=velocity db=velocity password=velocity state=present role_attr_flags=CREATEDB,NOSUPERUSER priv=ALL
+
+  - name: update configuration
+    copy: src=pg_hba.conf dest=/etc/postgresql/9.2/main/pg_hba.conf owner=postgres group=postgres mode=640 backup=yes
+    copy: src=pg_ident.conf dest=/etc/postgresql/9.2/main/pg_ident.conf owner=postgres group=postgres mode=640 backup=yes
+    copy: src=postgresql.conf dest=/etc/postgresql/9.2/main/postgresql.conf owner=postgres group=postgres mode=644 backup=yes
+    notify: 
+     - restart postgres
+
+  handlers:
+   - name: restart postgres
+     service: name=postgres state=restarted

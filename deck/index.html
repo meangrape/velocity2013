@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=1024, user-scalable=no">
+
+	<title>Ansible and PostgreSQL in EC2</title>
+	
+	<!-- Required stylesheet -->
+	<link rel="stylesheet" href="core/deck.core.css">
+	
+	<!-- Extension CSS files go here. Remove or add as needed. -->
+	<link rel="stylesheet" href="extensions/goto/deck.goto.css">
+	<link rel="stylesheet" href="extensions/menu/deck.menu.css">
+	<link rel="stylesheet" href="extensions/navigation/deck.navigation.css">
+	<link rel="stylesheet" href="extensions/status/deck.status.css">
+	<link rel="stylesheet" href="extensions/hash/deck.hash.css">
+	<link rel="stylesheet" href="extensions/scale/deck.scale.css">
+
+	<!-- Style theme. More available in /themes/style/ or create your own. -->
+	<link rel="stylesheet" href="themes/style/web-2.0.css">
+	
+	<!-- Transition theme. More available in /themes/transition/ or create your own. -->
+	<link rel="stylesheet" href="themes/transition/horizontal-slide.css">
+	
+	<!-- Required Modernizr file -->
+	<script src="modernizr.custom.js"></script>
+
+</head>
+<body class="deck-container">
+
+<!-- Begin slides. Just make elements with a class of slide. -->
+
+<section class="slide">
+	<a href="http://about.me/meangrape"><h2 align="right">about.me</h2></a>
+               <h3>Jay Edwards</h3></br>
+               <h5>jay@{palominodb,meangrape}.com </br> @meangrape</h5>
+            <ul>
+            <li>CTO, PalominoDB</li>
+            <li>Lead Database Engineer, Obama for America</li>
+            <li>Prehistoric Twitter Operations</li>
+            </ul>
+</section>
+
+<section class="slide">
+         <h2 align="right">Sleep</h2> 
+         <img src="images/yesterday_sleep.png" />
+</section>
+
+<section class="slide">
+         <h2 align="right">Or lack thereof</h2>
+         <img class="myleft" src="images/today_sleep.png" />
+</section>
+
+<section class="slide">
+        <h1><a href="https://github.com/jayed/velocity2013.git" align="center">git clone https://github.com/jayed/velocity2013.git</a></h1>
+</section>
+<section class="slide">
+	<h2 align="right">Agenda</h2>
+               <ul>
+                   <li class="slide">
+                       <h3>What's this all about?</h3>
+                       <p>Configuration management, server orchestration, Puppet, Chef, SaltStack</p></li>
+                   <li class="slide">
+                       <h3>Ansible 101</h3>
+                       <p> Architecture, transport methods, basic commands</p></li>
+                   <li class="slide">
+                       <h3>PostgreSQL basics</h3>
+                       <p>Features, architectural building blocks, replication</p></li>
+                   <li class="slide">
+                       <h3>Ansible and AWS</h3>
+                       <p>Provisioning and inventory management</p></li>
+                   <li class="slide">
+                       <h3>Ansible and PostgreSQL</h3>
+                       <p>Playbooks, live cluster build</p></li>
+                   <li class="slide">
+                       <h3>Where to go from here</h3>
+                       <p>Ansible Works, v1.2, AWS integrations</p></li>
+               </ul>
+</section>
+
+<section class="slide">
+	<h2 align="right">What is all of this?</h2>
+        <h3 align="center">Configuration management and Server Orchestration</h3>
+        <p>Making <s>servers</s> services do what you in an automatable, repeatable, API'able manner is a percursor for the DevOps notion of <em>continuous deployment.</em></p>
+        <ul>
+           <li class="slide"><h4>Continuous deployment</h4>
+                             <p>is a proxy term for being able to manage desired change</p></li>
+           <li class="slide"><h4>Desired change</h4>
+                             <p>if you can't handle change you want then undesired change is going to be painful</p></li>
+        </ul>
+</section>
+
+<section class="slide">
+	<h2 align="right">Puppet, Chef, and SaltStack</h2>
+        <ul>
+           <li class="slide"><h3>Puppet</h3>
+                             <ul>
+                                 <li>DSL language; accessibly via Ruby</li>
+                                 <li>Steep learning curve</li>
+                                 <li>MCollective</li>
+                             </ul>
+           </li>
+           <li class="slide"><h3>Chef</h3>
+                             <ul>
+                                 <li>Straight Ruby</li>
+                                 <li>Easier learning curve</li>
+                                 <li>Ironfan, MCollective</li>
+                             </ul>
+           </li>
+           <li class="slide"><h3>SaltStack</h3>
+                             <ul>
+                                 <li>Python</li>
+                                 <li>Newest; least personal experience</li>
+                                 <li>Combines config management & orchestation</li>
+                             </ul>
+           </li>
+        </ul>
+</section>
+
+<section class="slide">
+	<h2 align="right">Ansible 101</h2>
+        <ul>
+           <li><h4>SSH based; no PKI</h4></li>
+           <li><h4>No client-side agents</h4></li>
+           <li><h4>No centralized server</h4></li>
+           <li><h4>Configuration as data</h4></li>
+           <ul class="slide">
+           <pre><code>
+---
+- name: install and start nginx
+hosts: all
+user: root
+tasks:
+- name: install nginx
+apt: name=nginx state=present
+- name: start nginx
+service: name=nginx state=running
+           </code></pre>
+           </ul>
+        </ul>
+</section>
+
+<section class="slide">
+        <h2 align="right">Ansible 101</h2>
+        <img src="images/ansible_architecture.png">
+</section>
+
+<section class="slide">
+        <h2 align="right">Ansible 101</h2>
+           <pre><code>
+[web]
+web001.example.com
+web002.example.com
+web[003-100].example.com
+
+[db]
+db001.example.com
+
+[sneaky]
+sneaky.example.com:1234
+tunnel.example.com ansible_ssh_port=2222 ansible_ssh_host=10.0.0.10
+           </code></pre>
+</section>
+
+<section class="slide">
+        <h2>Install me!</h2>
+        <iframe src="http://ascii.io/a/3623/raw" width="750px" height="575px"></iframe>
+</section>
+
+<section class="slide">
+        <h2 align="right">Ansible 101</h2>
+        <ul>
+            <li>Playbooks contain Plays
+            <li>Plays contain Tasks
+            <li>Tasks call Modules and may trigger Handlers
+            <li>Handlers run once
+            <li>Sequential order 
+        </ul>
+</section>
+
+<section class="slide">
+        <h2 align="right">Ansible 101</h2>
+        <p>Tasks can contain variables and source jinja2 templates</p>
+        <pre><code>
+---
+- name: webserver configuration 
+hosts: webservers
+vars:
+  http_port: 80
+  max_clients: 200
+tasks:
+  - name: ensure that nginx is installed
+    apt: name=nginx state=present
+  - name: write the nginx config file
+    template: src=nginx.j2 dest=/etc/nginx.conf
+    notify:
+    - restart nginx
+  - name: ensure nginx is running
+    service: name=nginx state=started
+handlers:
+  - name: restart nginx
+  service: name=nginx state=restarted
+        </code></pre> 
+</section>
+
+<section class="slide">
+        <h2>Ping Pong</h2>
+        <iframe src="http://ascii.io/a/3655/raw" width="750px" height="575px"></iframe>
+</section>
+
+<section class="slide">
+	<h2 align="right">PostgreSQL Basics</h2>
+        <h4>version 9.2 improvements</h4>
+        <ul>
+            <li class="slide">Index-only scans</li>
+            <li class="slide">Cascading replication</li>
+            <li class="slide">Range types</li>
+            <ul class="slide">
+               <li>Intersecting ranges</li>
+               <li>Range exclusions<li>
+               <p>Two records can't have the same room with overlapping time slots
+               <pre><code> CREATE EXTENSION btree_gist ;
+ CREATE TABLE reservation (room_id int, period tstzrange);
+ ALTER TABLE reservation ADD  EXCLUDE USING GIST (room_id WITH =, period WITH &&);</code></pre></p>
+            </ul>
+            <li class="slide">JSON datatype</li>
+            <ul class="slide">
+               <li>Validates JSON</li>
+               <li>Convert to JSON</li>
+        </ul>
+</section>
+
+<section class="slide">
+	<h2 align="right">PostgreSQL Basics</h2>
+        <pre><code>
+ =#SELECT * FROM demo ;
+  username | posts |    emailaddress     
+ ----------+-------+---------------------
+  john     |   121 | john@nowhere.com
+  mickael  |   215 | mickael@nowhere.com
+ (2 rows)
+ 
+ =# SELECT row_to_json(demo) FROM demo;
+                                row_to_json                               
+ -------------------------------------------------------------------------
+  {"username":"john","posts":121,"emailaddress":"john@nowhere.com"}
+  {"username":"mickael","posts":215,"emailaddress":"mickael@nowhere.com"}
+ (2 rows)
+          </code></pre>
+</section>
+
+<section class="slide">
+	<h2 align="right">PostgreSQL Basics</h2>
+        <h4>version 9.2 features</h4>
+        <ul>
+            <li class="slide">Exceptional GIS</li>
+            <li class="slide">Native JSON</li>
+            <li class="slide">HStore (key-value) store</li>
+            <li class="slide">Decent full-text search</li>
+            <li class="slide">CREATE and DROP INDEX CONCURRENTLY</li>
+            <li class="slide">Embedded procedural languages</li>
+                <ul class="slide">
+                     <li>Python, Perl, Tcl</li>
+                     <li>PgOpenCL</li>
+                     <li>R, Ruby, Java, Shell, PHP, Scheme</li>
+                     <li>PL/v8 with CoffeeScript and LiveScript dialects</li>
+                </ul>
+        </ul>
+</section>
+
+<section class="slide">
+	<h2 align="right">PostgreSQL Basics</h2>
+        <blockquote cite="http://www.postgresql.org/docs/9.2/static/wal-intro.html"><p>Write-Ahead Logging (WAL) is a standard method for ensuring data integrity. A detailed description can be found in most (if not all) books about transaction processing.</p>
+        <p><cite>The PostgreSQL Documentation Team</cite></p>
+        </blockquote>
+</section>
+
+<section class="slide">
+        <h2 align="right">Ways to replicate</h2>
+        <ul>
+        <li>Streaming replication / Hot backup</li>
+            <ul>
+               <li>synchronous</li>
+               <li>asynchronous</li>
+            </ul>
+        <li><c>Log shipping / Warm Standby</c></li>
+        </ul>
+</section>
+
+<section class="slide">
+        <h2 align="right">Minimal replication</h2>
+        <img src="images/minimal_replication.png">
+</section>
+
+<section class="slide">
+        <h2 align="right">High-performance replication</h2>
+        <img src="images/maximal_replication.png">
+</section>
+
+<section class="slide">
+        <h2 align="right">Ansible and AWS</h2>
+        <p>Cloudformation integration, S3, ELBs...check out the <a href="http://www.ansibleworks.com/docs/modules.html#cloudformation">module documentation.</a></p>
+        <p class="slide">Download <code><a href="https://raw.github.com/ansible/ansible/devel/plugins/inventory/ec2.py">ec2.py</a></code> and <code><a href="https://raw.github.com/ansible/ansible/devel/plugins/inventory/ec2.ini">ec2.ini</a></code> from github.com/ansible/ansible/plugins/inventory</p>
+        <p class="slide"><code>cp ec2.py /etc/ansible/hosts && cp ec2.ini /etc/ansible && chmod +x /etc/ansible/hosts</code></p>
+        <p class="slide">Basically just a boto<->ansible integration wrapper</p>
+</section>
+
+<section class="slide">
+        <h2 align="right">Ansible and PostgreSQL</h2>
+        <pre><code>
+---
+- hosts:
+  - 127.0.0.1
+  connection: local
+  gather_facts: False
+  vars:
+    keypair: popup-jayed-UfK3eW3k
+    instance_type: m1.large
+    security_group: popup-jayed-UfK3eW3k
+    image: ami-40365329
+  tasks:
+  - name: Launch new EC2 instance
+    local_action: ec2
+        keypair=${keypair}
+        group=${security_group}
+        instance_type=${instance_type}
+        image=${image}
+        wait=true
+    register: ec2
+         </code></pre>
+</section>
+
+<section class="slide">
+        <h2 align="right">Ansible and PostgreSQL</h2>
+        <pre><code>
+---
+- hosts: db
+  connection: ssh
+  gather_facts: no
+  tasks:
+
+  - name: install python properties
+    apt: pkg=python-software-properties state=present
+  
+  - name: install postgresql repo
+    apt_repository: repo=ppa:pitti/postgresql
+ 
+  - name: update apt 
+    apt: update_cache=yes
+
+  - name: install postgres
+    apt: pkg={{ item }} state=present
+    with_items: 
+     - libpq5
+     - libpq-dev
+     - postgresql-9.2
+     - postgresql-contrib-9.2
+     - postgresql-server-dev-9.2
+     - python-psycopg2
+
+  - name: start postgresql
+    service: name=postgresql state=started enabled=true
+
+  - name: create database
+    sudo_user: postgres
+    postgresql_db: db=velocity encoding='UTF-8' lc_collate='en_US.UTF-8' lc_ctype='en_US.UTF-8' template='template0'
+
+  - name: create db user
+    sudo_user: postgres
+    postgresql_user: name=velocity db=velocity password=velocity state=present role_attr_flags=CREATEDB,NOSUPERUSER priv=ALL
+
+  - name: update configuration
+    copy: src=pg_hba.conf dest=/etc/postgresql/9.2/main/pg_hba.conf owner=postgres group=postgres mode=640 backup=yes
+    copy: src=pg_ident.conf dest=/etc/postgresql/9.2/main/pg_ident.conf owner=postgres group=postgres mode=640 backup=yes
+    copy: src=postgresql.conf dest=/etc/postgresql/9.2/main/postgresql.conf owner=postgres group=postgres mode=644 backup=yes
+    notify: 
+     - restart postgres
+
+  handlers:
+   - name: restart postgres
+     service: name=postgres state=restarted
+        </code></pre>
+</section>
+
+<section class="slide">
+     <h2>PostgreSQL installation</h2>
+     <iframe src="http://ascii.io/a/3662/raw" width="750px" height="575px"></iframe>
+</section>
+
+<section class="slide">
+        <h2>More servers</h2>
+        <iframe src="http://ascii.io/a/3671/raw" width="750px" height="575px"></iframe>
+</section>
+
+<section class="slide">
+     <h2>PostgreSQL installation</h2>
+     <iframe src="http://ascii.io/a/3672/raw" width="750px" height="575px"></iframe>
+</section>
+
+<section class="slide">
+     <h2 align="right">Problem?</h2>
+     <pre><code>
+ubuntu@ip-10-204-67-51:~$ sudo service postgresql start
+ * Starting PostgreSQL 9.1 database server                                                                                      [ OK ] 
+ * Starting PostgreSQL 9.2 database server                                                                                              * Error: Port conflict: another instance is already running on /var/run/postgresql with port 5432
+</code></pre>
+</section>
+
+<section class="slide">
+        <h2 align="right">Hmmm.</h2>
+<pre class="slide"><code>
+jayed@semillon:~/repos/velocity$ ansible all -c ssh -u ubuntu -s -m shell -a 'D="/etc/postgresql/9.1"; if [ -d $D ]; then rm -rf $D; fi'
+ec2-54-225-4-236.compute-1.amazonaws.com | success | rc=0 >>
+ec2-50-17-26-206.compute-1.amazonaws.com | success | rc=0 >>
+ec2-54-234-97-80.compute-1.amazonaws.com | success | rc=0 >>
+ec2-54-224-56-11.compute-1.amazonaws.com | success | rc=0 >>
+ec2-54-242-67-46.compute-1.amazonaws.com | success | rc=0 >>
+</code></pre>
+<pre class="slide"><code>
+jayed@semillon:~/repos/velocity$ ansible type_m1_large -c ssh -u ubuntu -s -m shell -a 'D="/var/lib/postgresql/9.1"; if [ -d $D ]; then rm -rf $D; fi'
+ec2-54-234-97-80.compute-1.amazonaws.com | success | rc=0 >>
+ec2-54-242-67-46.compute-1.amazonaws.com | success | rc=0 >>
+</code></pre>
+<pre class="slide"><code>
+jayed@semillon:~/repos/velocity$ ansible type_m1_large -c ssh -u ubuntu -s -m command -a "/usr/sbin/service postgresql restart"
+ec2-54-242-67-46.compute-1.amazonaws.com | FAILED | rc=1 >>
+ * Restarting PostgreSQL 9.2 database server
+ * Error: Port conflict: another instance is already running on /var/run/postgresql with port 5432
+   ...fail!
+ec2-54-234-97-80.compute-1.amazonaws.com | success | rc=0 >>
+ * Restarting PostgreSQL 9.2 database server
+   ...done.
+</code></pre>
+</section>
+
+<section class="slide">
+        <h2>Got it.</h2>
+        <iframe src="http://ascii.io/a/3676/raw" width="750px" height="575px"></iframe>        
+</section>
+
+<section class="slide">
+        <h2 aligh="right">Tools</h2>
+        <ul>
+           <li><a href="http://ascii.io">ascii.io</a></li>
+           <li><a href="http://ansibleworks.com">ansible</a></li>
+           <li><a href="http://imakewebthings.com/deck.js">deck.js</a></li>
+           <li><a href="http://github.com">github</a></li>
+           <li><a href="http://github.com/jayed/popup">popup</a></li>
+           <li><a href="http://aws.amazon.com">AWS</a></li>
+        </ul>
+</section>
+
+<section class="slide">
+	<a href="http://about.me/meangrape"><h2 align="right">about.me</h2></a>
+               <h1>Questions?</h1>
+</section>
+
+<!-- End slides. -->
+
+
+<!-- Begin extension snippets. Add or remove as needed. -->
+
+<!-- deck.navigation snippet -->
+<a href="#" class="deck-prev-link" title="Previous">&#8592;</a>
+<a href="#" class="deck-next-link" title="Next">&#8594;</a>
+
+<!-- deck.status snippet -->
+<p class="deck-status">
+	<span class="deck-status-current"></span>
+	/
+	<span class="deck-status-total"></span>
+</p>
+
+<!-- deck.goto snippet -->
+<form action="." method="get" class="goto-form">
+	<label for="goto-slide">Go to slide:</label>
+	<input type="text" name="slidenum" id="goto-slide" list="goto-datalist">
+	<datalist id="goto-datalist"></datalist>
+	<input type="submit" value="Go">
+</form>
+
+<!-- deck.hash snippet -->
+<a href="." title="Permalink to this slide" class="deck-permalink">#</a>
+
+<!-- End extension snippets. -->
+
+
+<!-- Required JS files. -->
+<script src="jquery-1.7.2.min.js"></script>
+<script src="core/deck.core.js"></script>
+
+<!-- Extension JS files. Add or remove as needed. -->
+<script src="core/deck.core.js"></script>
+<script src="extensions/hash/deck.hash.js"></script>
+<script src="extensions/menu/deck.menu.js"></script>
+<script src="extensions/goto/deck.goto.js"></script>
+<script src="extensions/status/deck.status.js"></script>
+<script src="extensions/navigation/deck.navigation.js"></script>
+<script src="extensions/scale/deck.scale.js"></script>
+<script src="extensions/iframes/deck.iframes.js"></script>
+
+<!-- Initialize the deck. You can put this in an external file if desired. -->
+<script>
+	$(function() {
+		$.deck('.slide');
+	});
+</script>
+
+<script>
+    $(function() {
+        $.deck('iframes');
+    });
+</script>
+
+</body>
+</html>

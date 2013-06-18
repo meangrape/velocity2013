@@ -1,0 +1,20 @@
+---
+- hosts:
+  - 127.0.0.1
+  connection: local
+  gather_facts: False
+  vars:
+    keypair: popup-jayed-UfK3eW3k
+    instance_type: m1.large
+    security_group: popup-jayed-UfK3eW3k
+    image: ami-40365329
+  tasks:
+  - name: Launch new EC2 instance
+    local_action: ec2
+        keypair=${keypair}
+        group=${security_group}
+        instance_type=${instance_type}
+        image=${image}
+        wait=true
+    register: ec2
+

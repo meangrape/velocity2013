@@ -1,0 +1,6 @@
+[db]
+pg1
+pg2
+pg3
+[dbmaster]
+pg1

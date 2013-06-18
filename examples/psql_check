@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+echo ansible all -o -c ssh -m command -a "psql -U velocity -h 127.0.0.1 velocity -wtc 'select 1;'"
+ansible all -o -c ssh -m command -a "psql -U velocity -h 127.0.0.1 velocity -wtc 'select 1;'"

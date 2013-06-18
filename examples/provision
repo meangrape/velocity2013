@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+echo ansible-playbook examples/provision.yaml -c local -i ./localhost
+ansible-playbook examples/provision.yaml -c local -i ./localhost
